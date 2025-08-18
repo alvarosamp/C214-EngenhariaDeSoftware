@@ -3,7 +3,8 @@ import requests
 # Exemplo: API pública de piadas
 url = "https://official-joke-api.appspot.com/random_joke"
 
-
+def teste_conflito():
+    response = requests.get(url)
 
     if response.status_code == 200:
         data = response.json()
@@ -11,7 +12,7 @@ url = "https://official-joke-api.appspot.com/random_joke"
     else:
         print("Erro ao acessar a API:", response.status_code)
 
-def testar_2():
+def teste_conflito_2():
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
@@ -23,5 +24,5 @@ def testar_2():
         print("❌ Teste falhou: erro ao acessar API. Status:", response.status_code)
 
 
-teste_1()
+teste_conflito()
 testar_2()

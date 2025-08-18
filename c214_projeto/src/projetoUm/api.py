@@ -5,14 +5,19 @@ import requests
 url = "https://official-joke-api.appspot.com/random_joke"
 
 
+
 def teste_12():
+=======
     if response.status_code == 200:
         data = response.json()
         print(f"{data['setup']} - {data['punchline']}")
     else:
         print("Erro ao acessar a API:", response.status_code)
 
-def teste_22():
+
+
+def testar_2():
+main
     response = requests.get(url)
     if response.status_code == 200:
         data = response.json()
@@ -24,5 +29,6 @@ def teste_22():
         print("❌ Teste falhou: erro ao acessar API. Status:", response.status_code)
 
 
+
 teste_12()
-teste_22()
+testar_22()

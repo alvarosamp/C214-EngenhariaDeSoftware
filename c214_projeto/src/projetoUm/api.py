@@ -1,34 +1,27 @@
-from urllib import response
 import requests
 
-# Exemplo: API pública de piadas
-url = "https://official-joke-api.appspot.com/random_joke"
-
-
-
-def teste_12():
-=======
+def get_weather(city_name, api_key):
+    base_url = f"http://api.openweathermap.org/data/2.5/weather?q={city_name}&appid={api_key}&units=metric"
+    response = requests.get(base_url)
+    data = response.json()
     if response.status_code == 200:
-        data = response.json()
-        print(f"{data['setup']} - {data['punchline']}")
+        weather_info = {
+            "Temperature": data["main"]["temp"],
+            "Description": data["weather"][0]["description"],
+            "Humidity": data["main"]["humidity"]
+        }
+        return weather_info
     else:
-        print("Erro ao acessar a API:", response.status_code)
+        return None
 
-
-
-def testar_2():
-main
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        if "setup" in data and "punchline" in data:
-            print("✅ Teste passou: API retornou piada válida.")
-        else:
-            print("❌ Teste falhou: resposta não contém os campos esperados.")
+if __name__ == "__main__":
+    city_name = input("Digite o nome da cidade: ")
+    api_key = "6cf13588b57142f0c752e3831d138664"
+    weather = get_weather(city_name, api_key)
+    if weather:
+        print(f"Previsão do tempo para {city_name}:")
+        print(f"Temperatura: {weather['Temperature']}°C")
+        print(f"Descrição: {weather['Description']}")
+        print(f"Umidade: {weather['Humidity']}%")
     else:
-        print("❌ Teste falhou: erro ao acessar API. Status:", response.status_code)
-
-
-
-teste_12()
-testar_22()
+        print("Não foi possível obter a previsão do tempo.")

@@ -100,3 +100,96 @@ def test_get_weather_timeout(monkeypatch):
     monkeypatch.setattr("requests.get", fake_get)
     with pytest.raises(requests.exceptions.Timeout):
         get_weather("Cidade", "fake_api_key")
+
+# --- TESTES POSITIVOS ADICIONAIS ---
+
+def test_get_weather_temp_negativa(mock_requests_get):
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "main": {"temp": -5, "humidity": 60},
+        "weather": [{"description": "neve"}]
+    }
+    mock_requests_get(mock_resp)
+    resultado = get_weather("Moscou", "fake_api_key")
+    assert resultado == {
+        "Temperature": -5,
+        "Description": "neve",
+        "Humidity": 60
+    }
+
+def test_get_weather_humidity_zero(mock_requests_get):
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "main": {"temp": 30, "humidity": 0},
+        "weather": [{"description": "seco"}]
+    }
+    mock_requests_get(mock_resp)
+    resultado = get_weather("Deserto", "fake_api_key")
+    assert resultado == {
+        "Temperature": 30,
+        "Description": "seco",
+        "Humidity": 0
+    }
+
+def test_get_weather_description_unicode(mock_requests_get):
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "main": {"temp": 18, "humidity": 90},
+        "weather": [{"description": "chuva ☔"}]
+    }
+    mock_requests_get(mock_resp)
+    resultado = get_weather("CidadeUnicode", "fake_api_key")
+    assert resultado == {
+        "Temperature": 18,
+        "Description": "chuva ☔",
+        "Humidity": 90
+    }
+
+# --- TESTES NEGATIVOS ADICIONAIS ---
+
+def test_get_weather_main_none(mock_requests_get):
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "main": None,
+        "weather": [{"description": "nublado"}]
+    }
+    mock_requests_get(mock_resp)
+    with pytest.raises(TypeError):
+        get_weather("Cidade", "fake_api_key")
+
+def test_get_weather_weather_none(mock_requests_get):
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "main": {"temp": 22, "humidity": 70},
+        "weather": None
+    }
+    mock_requests_get(mock_resp)
+    with pytest.raises(TypeError):
+        get_weather("Cidade", "fake_api_key")
+
+def test_get_weather_weather_empty_list(mock_requests_get):
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "main": {"temp": 22, "humidity": 70},
+        "weather": []
+    }
+    mock_requests_get(mock_resp)
+    with pytest.raises(IndexError):
+        get_weather("Cidade", "fake_api_key")
+
+def test_get_weather_json_raises_exception(monkeypatch):
+    class FakeResp:
+        status_code = 200
+        def json(self):
+            raise ValueError("Erro ao decodificar JSON")
+    def fake_get(*args, **kwargs):
+        return FakeResp()
+    monkeypatch.setattr("requests.get", fake_get)
+    with pytest.raises(ValueError):
+        get_weather("Cidade", "fake_api_key")

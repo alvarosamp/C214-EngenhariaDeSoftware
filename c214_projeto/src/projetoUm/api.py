@@ -6,7 +6,7 @@ def get_weather(city_name, api_key):
     data = response.json()
     if response.status_code == 200:
         weather_info = {
-            "Temperature": data["main"]["humidity"],
+            "Temperature": data["main"]["temp"],
             "Description": data["weather"][0]["description"],
             "Humidity": data["main"]["humidity"]
         }

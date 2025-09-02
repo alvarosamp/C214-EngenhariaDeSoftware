@@ -1,22 +1,32 @@
 import sys
 import os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 import pytest
-from unittest.mock import patch, MagicMock
-from api import get_weather
+from unittest.mock import MagicMock
 import requests
 
-# Teste positivo: resposta válida da API
-@patch('api.requests.get')
-def test_get_weather_sucesso(mock_get):
+# Adiciona o diretório atual ao sys.path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from api import get_weather  # Importa depois do sys.path
+
+# --- FIXTURE PARA MOCK DE requests.get ---
+@pytest.fixture
+def mock_requests_get(monkeypatch):
+    def _mock_get(mock_resp):
+        def fake_get(*args, **kwargs):
+            return mock_resp
+        monkeypatch.setattr("requests.get", fake_get)
+    return _mock_get
+
+# --- TESTES ---
+
+def test_get_weather_sucesso(mock_requests_get):
     mock_resp = MagicMock()
     mock_resp.status_code = 200
     mock_resp.json.return_value = {
         "main": {"temp": 25, "humidity": 80},
         "weather": [{"description": "céu limpo"}]
     }
-    mock_get.return_value = mock_resp
+    mock_requests_get(mock_resp)
     resultado = get_weather("Belo Horizonte", "fake_api_key")
     assert resultado == {
         "Temperature": 25,
@@ -24,80 +34,69 @@ def test_get_weather_sucesso(mock_get):
         "Humidity": 80
     }
 
-# Teste negativo: status code diferente de 200
-@patch('api.requests.get')
-def test_get_weather_falha_status(mock_get):
+def test_get_weather_falha_status(mock_requests_get):
     mock_resp = MagicMock()
     mock_resp.status_code = 404
     mock_resp.json.return_value = {}
-    mock_get.return_value = mock_resp
+    mock_requests_get(mock_resp)
     resultado = get_weather("CidadeInvalida", "fake_api_key")
     assert resultado is None
 
-# Teste negativo: resposta incompleta
-@patch('api.requests.get')
-def test_get_weather_resposta_incompleta(mock_get):
+def test_get_weather_resposta_incompleta(mock_requests_get):
     mock_resp = MagicMock()
     mock_resp.status_code = 200
     mock_resp.json.return_value = {"main": {}, "weather": [{}]}
-    mock_get.return_value = mock_resp
+    mock_requests_get(mock_resp)
     with pytest.raises(KeyError):
         get_weather("Cidade", "fake_api_key")
 
-# Teste negativo: cidade inexistente
-@patch('api.requests.get')
-def test_get_weather_cidade_inexistente(mock_get):
+def test_get_weather_cidade_inexistente(mock_requests_get):
     mock_resp = MagicMock()
     mock_resp.status_code = 404
     mock_resp.json.return_value = {"message": "city not found"}
-    mock_get.return_value = mock_resp
+    mock_requests_get(mock_resp)
     resultado = get_weather("CidadeQueNaoExiste", "fake_api_key")
     assert resultado is None
 
-# Teste negativo: API key inválida
-@patch('api.requests.get')
-def test_get_weather_api_key_invalida(mock_get):
+def test_get_weather_api_key_invalida(mock_requests_get):
     mock_resp = MagicMock()
     mock_resp.status_code = 401
     mock_resp.json.return_value = {"message": "Invalid API key"}
-    mock_get.return_value = mock_resp
+    mock_requests_get(mock_resp)
     resultado = get_weather("Belo Horizonte", "chave_invalida")
     assert resultado is None
 
-# Teste negativo: resposta sem campo weather
-@patch('api.requests.get')
-def test_get_weather_sem_weather(mock_get):
+def test_get_weather_sem_weather(mock_requests_get):
     mock_resp = MagicMock()
     mock_resp.status_code = 200
     mock_resp.json.return_value = {"main": {"temp": 20, "humidity": 50}}
-    mock_get.return_value = mock_resp
+    mock_requests_get(mock_resp)
     with pytest.raises(KeyError):
         get_weather("Cidade", "fake_api_key")
 
-# Teste negativo: resposta sem campo main
-@patch('api.requests.get')
-def test_get_weather_sem_main(mock_get):
+def test_get_weather_sem_main(mock_requests_get):
     mock_resp = MagicMock()
     mock_resp.status_code = 200
     mock_resp.json.return_value = {"weather": [{"description": "nublado"}]}
-    mock_get.return_value = mock_resp
+    mock_requests_get(mock_resp)
     with pytest.raises(KeyError):
         get_weather("Cidade", "fake_api_key")
 
-# Teste negativo: tipos errados nos campos
-@patch('api.requests.get')
-def test_get_weather_tipos_errados(mock_get):
+def test_get_weather_tipos_errados(mock_requests_get):
     mock_resp = MagicMock()
     mock_resp.status_code = 200
-    mock_resp.json.return_value = {"main": {"temp": "vinte", "humidity": "cinquenta"}, "weather": [{"description": 123}]}
-    mock_get.return_value = mock_resp
+    mock_resp.json.return_value = {
+        "main": {"temp": "vinte", "humidity": "cinquenta"},
+        "weather": [{"description": 123}]
+    }
+    mock_requests_get(mock_resp)
     resultado = get_weather("Cidade", "fake_api_key")
     assert isinstance(resultado["Temperature"], str)
     assert isinstance(resultado["Description"], int)
 
-# Teste negativo: resposta lenta (timeout)
-@patch('api.requests.get')
-def test_get_weather_timeout(mock_get):
-    mock_get.side_effect = requests.exceptions.Timeout
+def test_get_weather_timeout(monkeypatch):
+    def fake_get(*args, **kwargs):
+        raise requests.exceptions.Timeout
+    monkeypatch.setattr("requests.get", fake_get)
     with pytest.raises(requests.exceptions.Timeout):
         get_weather("Cidade", "fake_api_key")

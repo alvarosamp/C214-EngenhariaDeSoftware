@@ -88,4 +88,19 @@ jobs:
           BUILD_STATUS: ${{ needs.build.result }}
         run: |
           chmod +x ./scripts/send_email_ubuntu.sh
-          ./scripts/send_email_ubuntu.sh
+          # Run the Ubuntu send script and capture its output
+          ./scripts/send_email_ubuntu.sh > send.log 2>&1 || true
+          # If swaks failed (exit non-zero), try Python notify as fallback and capture its output
+          if grep -q "swaks finished" send.log; then
+            echo "send_email_ubuntu.sh reported success (or accepted by SMTP)."
+          else
+            echo "swaks send likely failed or not confirmed; running python fallback notify.py"
+            python ./scripts/notify.py > fallback.log 2>&1 || true
+          fi
+      - name: Upload notify logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: notify-logs
+          path: |
+            send.log
+            fallback.log

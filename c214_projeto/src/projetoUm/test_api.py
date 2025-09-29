@@ -193,3 +193,56 @@ def test_get_weather_json_raises_exception(monkeypatch):
     monkeypatch.setattr("requests.get", fake_get)
     with pytest.raises(ValueError):
         get_weather("Cidade", "fake_api_key")
+
+
+# --- TESTES ADICIONAIS PARA ALCANÇAR 20 CENÁRIOS ---
+def test_get_weather_temp_float(mock_requests_get):
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "main": {"temp": 21.5, "humidity": 55},
+        "weather": [{"description": "ameno"}]
+    }
+    mock_requests_get(mock_resp)
+    resultado = get_weather("CidadeFloat", "fake_api_key")
+    assert resultado == {
+        "Temperature": 21.5,
+        "Description": "ameno",
+        "Humidity": 55
+    }
+
+def test_get_weather_long_description(mock_requests_get):
+    long_desc = "chuva intensa 🌧️🌧️ com ventos fortes e possibilidade de queda de galhos"
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "main": {"temp": 16, "humidity": 85},
+        "weather": [{"description": long_desc}]
+    }
+    mock_requests_get(mock_resp)
+    resultado = get_weather("CidadeLongDesc", "fake_api_key")
+    assert resultado["Description"] == long_desc
+
+def test_get_weather_ignores_extra_fields(mock_requests_get):
+    mock_resp = MagicMock()
+    mock_resp.status_code = 200
+    mock_resp.json.return_value = {
+        "main": {"temp": 28, "humidity": 40, "pressure": 1012},
+        "weather": [{"description": "ensolarado", "id": 800}],
+        "extra": {"foo": "bar"}
+    }
+    mock_requests_get(mock_resp)
+    resultado = get_weather("CidadeExtra", "fake_api_key")
+    assert resultado == {
+        "Temperature": 28,
+        "Description": "ensolarado",
+        "Humidity": 40
+    }
+
+def test_get_weather_server_error_returns_none(mock_requests_get):
+    mock_resp = MagicMock()
+    mock_resp.status_code = 500
+    mock_resp.json.return_value = {"message": "server error"}
+    mock_requests_get(mock_resp)
+    resultado = get_weather("CidadeServerErr", "fake_api_key")
+    assert resultado is None

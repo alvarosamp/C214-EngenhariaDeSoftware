@@ -18,7 +18,7 @@ jobs:
           pip install -r c214_projeto/requirements.txt
       - name: Run tests (pytest)
         env:
-          PYTHONPATH: ./src
+          PYTHONPATH: c214_projeto/src
         run: |
           pytest -q --junitxml=report.xml
       - name: Upload test report
@@ -49,6 +49,23 @@ jobs:
           name: package-dist
           path: c214_projeto/dist/*
 
+  lint:
+    name: Lint (runs in parallel)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Install flake8
+        run: |
+          python -m pip install --upgrade pip
+          pip install flake8
+      - name: Run flake8
+        run: |
+          flake8 . --max-line-length=127 --exit-zero
+
   notify:
     name: Send notification (email) using script
     runs-on: ubuntu-latest
@@ -57,7 +74,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Run notification script
         env:
-          RECIPIENT_EMAIL: 'vish88@outlook.com'
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
           SMTP_SERVER: ${{ secrets.SMTP_SERVER }}
           SMTP_PORT: ${{ secrets.SMTP_PORT }}
           SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}

@@ -2,11 +2,18 @@ name: Python package CI
 
 on: [push]
 
+# Prevent duplicate workflow runs for the same ref
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   tests:
     name: Run tests and upload report
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
+      max-parallel: 2
       matrix:
         python-version: [3.10, 3.9]  # Rodar testes com Python 3.10 e 3.9 em paralelo
     steps:

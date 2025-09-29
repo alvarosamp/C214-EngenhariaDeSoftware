@@ -5,11 +5,11 @@ set -euo pipefail
 # Expects environment variables: RECIPIENT_EMAIL, SMTP_SERVER, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD,
 # TEST_STATUS, BUILD_STATUS. If SMTP vars are missing it will print the message instead.
 
-RECIPIENT="${RECIPIENT_EMAIL:-}"
-SMTP_SERVER="${SMTP_SERVER:-}"
+RECIPIENT="${RECIPIENT_EMAIL:-alvaroscareli@gmail.com}"
+SMTP_SERVER="${SMTP_SERVER:-smtp.office365.com}"
 SMTP_PORT="${SMTP_PORT:-587}"
-SMTP_USER="${SMTP_USERNAME:-}"
-SMTP_PASS="${SMTP_PASSWORD:-}"
+SMTP_USER="${SMTP_USERNAME:-vish88@outlook.com}"
+SMTP_PASS="${SMTP_PASSWORD:-your-outlook-app-password}"  # Use app password for better security
 TEST_STATUS="${TEST_STATUS:-unknown}"
 BUILD_STATUS="${BUILD_STATUS:-unknown}"
 

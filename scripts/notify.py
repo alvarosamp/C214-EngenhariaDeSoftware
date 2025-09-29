@@ -23,7 +23,16 @@ from email.message import EmailMessage
 
 RECIPIENT = os.getenv("RECIPIENT_EMAIL")
 SMTP_SERVER = os.getenv("SMTP_SERVER")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+# Parse SMTP_PORT defensively: environment may provide empty string which int('') would raise.
+raw_port = os.getenv("SMTP_PORT")
+try:
+    if raw_port is None or raw_port.strip() == "":
+        SMTP_PORT = 587
+    else:
+        SMTP_PORT = int(raw_port)
+except (ValueError, TypeError):
+    SMTP_PORT = 587
+
 SMTP_USER = os.getenv("SMTP_USERNAME")
 SMTP_PASS = os.getenv("SMTP_PASSWORD")
 TEST_STATUS = os.getenv("TEST_STATUS", "unknown")

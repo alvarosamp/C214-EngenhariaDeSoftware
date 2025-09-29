@@ -72,6 +72,11 @@ jobs:
     needs: [tests, build]
     steps:
       - uses: actions/checkout@v4
+      - name: Download test report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: test-report
+          path: .
       - name: Run notification script
         env:
           RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
@@ -82,4 +87,5 @@ jobs:
           TEST_STATUS: ${{ needs.tests.result }}
           BUILD_STATUS: ${{ needs.build.result }}
         run: |
-          python ./scripts/notify.py
+          chmod +x ./scripts/send_email_ubuntu.sh
+          ./scripts/send_email_ubuntu.sh

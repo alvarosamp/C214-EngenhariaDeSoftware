@@ -40,6 +40,7 @@ jobs:
   build:
     name: Build package and upload artifact
     runs-on: ubuntu-latest
+    # Rodando em paralelo com o job de testes
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.9
@@ -58,11 +59,10 @@ jobs:
           name: package-dist
           path: c214_projeto/dist/*
 
-
-
   notify:
     name: Send notification (email) using script
     runs-on: ubuntu-latest
+    # Esse job só vai rodar depois que tanto os jobs de testes quanto de build forem concluídos
     needs: [tests, build]
     steps:
       - uses: actions/checkout@v4

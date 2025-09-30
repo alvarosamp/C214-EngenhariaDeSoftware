@@ -62,15 +62,16 @@ jobs:
   notify:
     name: Send notification (email) using script
     runs-on: ubuntu-latest
-    # Esse job só vai rodar depois que tanto os jobs de testes quanto de build forem concluídos
+    # Este job só vai rodar depois que tanto os jobs de testes quanto de build forem concluídos
     needs: [tests, build]
+    if: always()  # Vai rodar sempre, mesmo que algum job anterior tenha falhado
     steps:
       - uses: actions/checkout@v4
       - name: Download test report artifact
         uses: actions/download-artifact@v4
         with:
           name: test-report-3.9
-          path: . # Baixando o report do Python 3.9
+          path: .  # Baixando o report do Python 3.9
       - name: Run notification script
         env:
           RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}

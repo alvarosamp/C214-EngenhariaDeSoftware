@@ -1,8 +1,8 @@
-name: Python package CI 
+name: Python package CI
 
 on: [push]
 
-# Prevent duplicate workflow runs for the same ref
+# Impede a execução de workflows duplicados para a mesma referência
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
@@ -11,17 +11,14 @@ jobs:
   tests:
     name: Run tests and upload report
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      max-parallel: 1
-      matrix:
-        python-version: [3.9]  # Rodar testes apenas com Python 3.9
+    # A seção 'strategy: matrix:' foi removida daqui para simplificar o job
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.9
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          # A versão do Python agora está definida diretamente
+          python-version: '3.9'
       - name: Install test deps
         run: |
           python -m pip install --upgrade pip
@@ -30,17 +27,19 @@ jobs:
         env:
           PYTHONPATH: c214_projeto/src
         run: |
-          pytest -q --junitxml=report-${{ matrix.python-version }}.xml
+          # O nome do arquivo de relatório agora é fixo
+          pytest -q --junitxml=report-3.9.xml
       - name: Upload test report
         uses: actions/upload-artifact@v4
         with:
-          name: test-report-${{ matrix.python-version }}
-          path: report-${{ matrix.python-version }}.xml
+          # O nome do artefato agora é fixo
+          name: test-report-3.9
+          path: report-3.9.xml
 
   build:
     name: Build package and upload artifact
     runs-on: ubuntu-latest
-    # Rodando em paralelo com o job de testes
+    # Este job já estava correto e roda em paralelo com 'tests'
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python 3.9
@@ -64,14 +63,14 @@ jobs:
     runs-on: ubuntu-latest
     # Este job só vai rodar depois que tanto os jobs de testes quanto de build forem concluídos
     needs: [tests, build]
-    if: always()  # Vai rodar sempre, mesmo que algum job anterior tenha falhado
+    if: always() # Vai rodar sempre, mesmo que algum job anterior tenha falhado
     steps:
       - uses: actions/checkout@v4
       - name: Download test report artifact
         uses: actions/download-artifact@v4
         with:
           name: test-report-3.9
-          path: .  # Baixando o report do Python 3.9
+          path: . # Baixando o report do Python 3.9
       - name: Run notification script
         env:
           RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
